@@ -1,2 +1,2 @@
-flash:
-	st-flash --reset write build/mekafiletest.bin 0x08000000
+flash: $(BUILD_DIR)/$(TARGET).bin
+	st-flash --reset write $(BUILD_DIR)/$(TARGET).bin 0x08000000
