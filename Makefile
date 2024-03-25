@@ -2,6 +2,14 @@ erase:
 	cd small && make erase
 	cd big && make erase
 
+reset:
+	cd small && make reset
+	cd big && make reset
+
+flash:
+	cd small && make flash
+	cd big && make flash
+
 clean:
 	cd small && make clean
 	cd big && make clean
