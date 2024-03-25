@@ -198,5 +198,4 @@ clean:
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 # *** EOF ***
-MCU_SERIAL=400018000200004E4B52524E
 include ../helpers.mk
