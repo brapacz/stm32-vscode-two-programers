@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 erase:
 	cd small && make erase
 	cd big && make erase
@@ -18,5 +20,5 @@ all:
 	cd small && make all
 	cd big && make all
 
-hello:
-	echo hello
+serial:
+	./connect_to_serial
