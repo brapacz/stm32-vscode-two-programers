@@ -198,4 +198,4 @@ clean:
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 # *** EOF ***
-include ../helpers.mk
+include ../common.mk
