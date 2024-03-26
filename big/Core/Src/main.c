@@ -44,7 +44,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t UART1_rxBuffer[32] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,8 +97,16 @@ int main(void)
   HAL_UART_Transmit(&huart1, "Ready\r\n", 7, 1000);
   while (1)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(231);
+    memset(&UART1_rxBuffer, 0x00, sizeof(UART1_rxBuffer));
+    HAL_UART_Receive(&huart1, UART1_rxBuffer, 32, 100);
+    if (strlen(UART1_rxBuffer) > 0)
+    {
+      HAL_UART_Transmit(&huart1, "got: ", 5, 100);
+      HAL_UART_Transmit(&huart1, UART1_rxBuffer, strlen(UART1_rxBuffer), 100);
+      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    }
+    // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+    // HAL_Delay(231);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
