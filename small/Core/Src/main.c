@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -44,7 +45,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t UART2_rxBuffer[32] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,12 +55,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  HAL_UART_Transmit(&huart2, UART2_rxBuffer, 32, 100);
-  HAL_UART_Receive_IT(&huart2, UART2_rxBuffer, 32);
-}
 /* USER CODE END 0 */
 
 /**
@@ -93,22 +87,35 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit(&huart2, "Ready\r\n", 7, 100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t UART2_rxBuffer[32] = {0};
+
+  while (1)
+  {
+    HAL_SPI_Transmit(&hspi1, "test\r\n", 6, 5000);
+    HAL_UART_Transmit(&huart2, "send tests message on SPI\r\n", 27, 100);
+    HAL_Delay(1000);
+  }
+
   while (1)
   {
 
-    memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
-    HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100);
-    if (strlen(UART2_rxBuffer) > 0)
+    if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100))
     {
-      HAL_UART_Transmit(&huart2, "got: ", 5, 100);
-      HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      if (strlen(UART2_rxBuffer) > 0)
+      {
+        HAL_UART_Transmit(&huart2, "got: ", 5, 100);
+        HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
+        // HAL_SPI_Transmit(&hspi1, UART2_rxBuffer, sizeof(UART2_rxBuffer), 1);
+        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+        memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
+      }
     }
     // HAL_Delay(200);
     /* USER CODE END WHILE */
