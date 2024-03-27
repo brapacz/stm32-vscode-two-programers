@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -44,7 +45,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t UART1_rxBuffer[32] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,9 +59,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
 
@@ -88,6 +88,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -95,15 +96,46 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_UART_Transmit(&huart1, "Ready\r\n", 7, 1000);
+
+  uint8_t UART1_rxBuffer[32] = {0};
+  uint8_t SPI1_rxBuffer[32] = {0};
+
   while (1)
   {
-    memset(&UART1_rxBuffer, 0x00, sizeof(UART1_rxBuffer));
-    HAL_UART_Receive(&huart1, UART1_rxBuffer, 32, 100);
-    if (strlen(UART1_rxBuffer) > 0)
+    HAL_UART_Transmit(&huart1, "waiting for message on SPI ... ", 31, 100);
+    HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 1000);
+    HAL_UART_Transmit(&huart1, "got ", 4, 100);
+    char buffer[1];
+    buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
+    buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
+    HAL_UART_Transmit(&huart1, buffer, 2, 100);
+    HAL_UART_Transmit(&huart1, " bytes\r\n", 8, 100);
+    HAL_UART_Transmit(&huart1, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
+    HAL_UART_Transmit(&huart1, "\r\n", 2, 100);
+  }
+
+  while (1)
+  {
+    if (HAL_OK == HAL_UART_Receive(&huart1, UART1_rxBuffer, 32, 100))
     {
-      HAL_UART_Transmit(&huart1, "got: ", 5, 100);
-      HAL_UART_Transmit(&huart1, UART1_rxBuffer, strlen(UART1_rxBuffer), 100);
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      if (strlen(UART1_rxBuffer) > 0)
+      {
+        HAL_UART_Transmit(&huart1, "got: ", 5, 100);
+        HAL_UART_Transmit(&huart1, UART1_rxBuffer, strlen(UART1_rxBuffer), 100);
+        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+        memset(&UART1_rxBuffer, 0x00, sizeof(UART1_rxBuffer));
+      }
+    }
+
+    if (HAL_OK == HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 100))
+    {
+      if (strlen(SPI1_rxBuffer) > 0)
+      {
+        HAL_UART_Transmit(&huart1, "spi: ", 5, 100);
+        HAL_UART_Transmit(&huart1, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
+        HAL_UART_Transmit(&huart1, "\r\n", 2, 100);
+        memset(&SPI1_rxBuffer, 0x00, sizeof(SPI1_rxBuffer));
+      }
     }
     // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
     // HAL_Delay(231);
@@ -115,17 +147,17 @@ int main(void)
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -136,8 +168,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -154,9 +187,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -168,14 +201,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
