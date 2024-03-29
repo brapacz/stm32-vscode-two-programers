@@ -58,9 +58,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
 
@@ -94,49 +94,57 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t UART2_rxBuffer[32] = {0};
+  uint8_t UART1_rxBuffer[32] = {0};
+  uint8_t SPI1_rxBuffer[32] = {0};
 
   while (1)
   {
-    HAL_SPI_Transmit(&hspi1, "test\r\n", 6, 5000);
-    HAL_UART_Transmit(&huart2, "send tests message on SPI\r\n", 27, 100);
-    HAL_Delay(1000);
+    HAL_UART_Transmit(&huart2, "waiting for message on SPI ... ", 31, 100);
+    HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 1000);
+    HAL_UART_Transmit(&huart2, "got ", 4, 100);
+    char buffer[1];
+    buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
+    buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
+    HAL_UART_Transmit(&huart2, buffer, 2, 100);
+    HAL_UART_Transmit(&huart2, " bytes\r\n", 8, 100);
+    HAL_UART_Transmit(&huart2, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
+    HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
   }
 
-  while (1)
-  {
+  // while (1)
+  // {
 
-    if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100))
-    {
-      if (strlen(UART2_rxBuffer) > 0)
-      {
-        HAL_UART_Transmit(&huart2, "got: ", 5, 100);
-        HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
-        // HAL_SPI_Transmit(&hspi1, UART2_rxBuffer, sizeof(UART2_rxBuffer), 1);
-        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-        memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
-      }
-    }
-    // HAL_Delay(200);
-    /* USER CODE END WHILE */
+  //   if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100))
+  //   {
+  //     if (strlen(UART2_rxBuffer) > 0)
+  //     {
+  //       HAL_UART_Transmit(&huart2, "got: ", 5, 100);
+  //       HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
+  //       // HAL_SPI_Transmit(&hspi1, UART2_rxBuffer, sizeof(UART2_rxBuffer), 1);
+  //       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+  //       memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
+  //     }
+  //   }
+  // HAL_Delay(200);
+  /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-  }
+  /* USER CODE BEGIN 3 */
+  // }
   /* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -147,9 +155,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -165,9 +172,9 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -179,14 +186,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
