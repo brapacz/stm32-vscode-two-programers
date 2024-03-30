@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -88,57 +89,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit(&huart2, "Ready\r\n", 7, 100);
-  HAL_SPI_Receive_IT(&hspi1, SPI1_rxBuffer, BUFFER_SIZE);
-  while (1)
-  {
-  }
+  HAL_SPI_Receive_DMA(&hspi1, SPI1_rxBuffer, 6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  // uint8_t UART1_rxBuffer[BUFFER_SIZE] = {0};
-  // uint8_t SPI1_rxBuffer[BUFFER_SIZE] = {0};
+  while (1)
+  {
+    /* USER CODE END WHILE */
 
-  // while (1)
-  // {
-  //   HAL_UART_Transmit(&huart2, "waiting for message on SPI ... ", 31, 100);
-  //   HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 1000);
-  //   HAL_UART_Transmit(&huart2, "got ", 4, 100);
-  //   char buffer[1];
-  //   buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
-  //   buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
-  //   HAL_UART_Transmit(&huart2, buffer, 2, 100);
-  //   HAL_UART_Transmit(&huart2, " bytes\r\n", 8, 100);
-  //   HAL_UART_Transmit(&huart2, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
-  //   HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
-  // }
-
-  // while (1)
-  // {
-
-  //   if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, BUFFER_SIZE, 100))
-  //   {
-  //     if (strlen(UART2_rxBuffer) > 0)
-  //     {
-  //       HAL_UART_Transmit(&huart2, "got: ", 5, 100);
-  //       HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
-  //       // HAL_SPI_Transmit(&hspi1, UART2_rxBuffer, sizeof(UART2_rxBuffer), 1);
-  //       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  //       memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
-  //     }
-  //   }
-  // HAL_Delay(200);
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-  // }
+    /* USER CODE BEGIN 3 */
+  }
   /* USER CODE END 3 */
 }
-
 /**
  * @brief System Clock Configuration
  * @retval None
@@ -176,8 +144,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-  HAL_SPI_Receive_IT(&hspi1, SPI1_rxBuffer, BUFFER_SIZE);
-  // HAL_UART_Transmit_IT(&huart1, SPI1_rxBuffer, BUFFER_SIZE);
+  HAL_SPI_Receive_DMA(&hspi1, SPI1_rxBuffer, 6);
+  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
   HAL_UART_Transmit(&huart2, "got ", 4, 100);
   char buffer[1];
