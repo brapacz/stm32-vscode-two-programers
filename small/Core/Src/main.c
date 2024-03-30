@@ -34,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define BUFFER_SIZE 32
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,6 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint8_t UART1_rxBuffer[BUFFER_SIZE + 1] = {0};
+uint8_t SPI1_rxBuffer[BUFFER_SIZE + 1] = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,31 +92,35 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Transmit(&huart2, "Ready\r\n", 7, 100);
+  HAL_SPI_Receive_IT(&hspi1, SPI1_rxBuffer, BUFFER_SIZE);
+  while (1)
+  {
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t UART1_rxBuffer[32] = {0};
-  uint8_t SPI1_rxBuffer[32] = {0};
+  // uint8_t UART1_rxBuffer[BUFFER_SIZE] = {0};
+  // uint8_t SPI1_rxBuffer[BUFFER_SIZE] = {0};
 
-  while (1)
-  {
-    HAL_UART_Transmit(&huart2, "waiting for message on SPI ... ", 31, 100);
-    HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 1000);
-    HAL_UART_Transmit(&huart2, "got ", 4, 100);
-    char buffer[1];
-    buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
-    buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
-    HAL_UART_Transmit(&huart2, buffer, 2, 100);
-    HAL_UART_Transmit(&huart2, " bytes\r\n", 8, 100);
-    HAL_UART_Transmit(&huart2, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
-    HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
-  }
+  // while (1)
+  // {
+  //   HAL_UART_Transmit(&huart2, "waiting for message on SPI ... ", 31, 100);
+  //   HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 1000);
+  //   HAL_UART_Transmit(&huart2, "got ", 4, 100);
+  //   char buffer[1];
+  //   buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
+  //   buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
+  //   HAL_UART_Transmit(&huart2, buffer, 2, 100);
+  //   HAL_UART_Transmit(&huart2, " bytes\r\n", 8, 100);
+  //   HAL_UART_Transmit(&huart2, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
+  //   HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
+  // }
 
   // while (1)
   // {
 
-  //   if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100))
+  //   if (HAL_OK == HAL_UART_Receive(&huart2, UART2_rxBuffer, BUFFER_SIZE, 100))
   //   {
   //     if (strlen(UART2_rxBuffer) > 0)
   //     {
@@ -168,7 +174,22 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  HAL_SPI_Receive_IT(&hspi1, SPI1_rxBuffer, BUFFER_SIZE);
+  // HAL_UART_Transmit_IT(&huart1, SPI1_rxBuffer, BUFFER_SIZE);
 
+  HAL_UART_Transmit(&huart2, "got ", 4, 100);
+  char buffer[1];
+  buffer[0] = '0' + strlen(SPI1_rxBuffer) / 10;
+  buffer[1] = '0' + strlen(SPI1_rxBuffer) % 10;
+  HAL_UART_Transmit(&huart2, buffer, 2, 100);
+  HAL_UART_Transmit(&huart2, " bytes\r\n", 8, 100);
+  HAL_UART_Transmit(&huart2, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
+  HAL_UART_Transmit(&huart2, "\r\n", 2, 100);
+
+  memset(&SPI1_rxBuffer, 0, BUFFER_SIZE);
+}
 /* USER CODE END 4 */
 
 /**
