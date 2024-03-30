@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build both",
+            "group": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "all"
+            ]
+        },
+        {
+            "label": "Clean both",
+            "group": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "clean"
+            ]
+        },
+        {
+            "label": "Flash both",
+            "group": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "flash"
+            ]
+        },
+        {
+            "label": "Reset both",
+            "group": "build",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "reset"
+            ]
+        }
+    ]
+}
