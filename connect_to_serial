@@ -4,5 +4,5 @@ PS3="Select serial device to connect (or type E to exit): "
 select DEV in /dev/ttyUSB* /dev/serial/by-path/*
 do
     [ "$DEV" = "" ] && break
-    picocom -b 115200 $DEV
+    picocom -b 115200 --echo $DEV
 done
