@@ -57,6 +57,7 @@
 /* External variables --------------------------------------------------------*/
 extern DMA_HandleTypeDef hdma_spi1_rx;
 extern SPI_HandleTypeDef hspi1;
+extern DMA_HandleTypeDef hdma_tim1_ch3_up;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -153,6 +154,20 @@ void DMA1_Channel2_3_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
 
   /* USER CODE END DMA1_Channel2_3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA1 channel 4 and 5 interrupts.
+  */
+void DMA1_Channel4_5_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel4_5_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel4_5_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_tim1_ch3_up);
+  /* USER CODE BEGIN DMA1_Channel4_5_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel4_5_IRQn 1 */
 }
 
 /**

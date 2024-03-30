@@ -103,7 +103,7 @@ int main(void)
   {
     HAL_SPI_Transmit(&hspi1, "test\r\n", 6, 5000);
     HAL_UART_Transmit(&huart1, "send tests message on SPI\r\n", 27, 100);
-    HAL_Delay(1200);
+    HAL_Delay(300);
   }
 
   // while (1)
