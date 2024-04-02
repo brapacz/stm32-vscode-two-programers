@@ -98,43 +98,23 @@ int main(void)
   HAL_UART_Transmit(&huart1, "Ready\r\n", 7, 1000);
 
   uint8_t UART2_rxBuffer[32] = {0};
+  char sendBuffer[] = "testXX\r\n\0";
 
+  size_t counter = 0;
   while (1)
   {
-    HAL_SPI_Transmit(&hspi1, "test\r\n", 6, 5000);
+    sprintf(&sendBuffer, "test%02d\r\n", counter);
+    HAL_SPI_Transmit(&hspi1, sendBuffer, strlen(sendBuffer), 5000);
     HAL_UART_Transmit(&huart1, "send tests message on SPI\r\n", 27, 100);
     HAL_Delay(300);
+
+    counter++;
+    counter %= 100;
   }
 
-  // while (1)
-  // {
-  //   if (HAL_OK == HAL_UART_Receive(&huart1, UART1_rxBuffer, 32, 100))
-  //   {
-  //     if (strlen(UART1_rxBuffer) > 0)
-  //     {
-  //       HAL_UART_Transmit(&huart1, "got: ", 5, 100);
-  //       HAL_UART_Transmit(&huart1, UART1_rxBuffer, strlen(UART1_rxBuffer), 100);
-  //       HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  //       memset(&UART1_rxBuffer, 0x00, sizeof(UART1_rxBuffer));
-  //     }
-  //   }
-
-  //   if (HAL_OK == HAL_SPI_Receive(&hspi1, SPI1_rxBuffer, sizeof(SPI1_rxBuffer), 100))
-  //   {
-  //     if (strlen(SPI1_rxBuffer) > 0)
-  //     {
-  //       HAL_UART_Transmit(&huart1, "spi: ", 5, 100);
-  //       HAL_UART_Transmit(&huart1, SPI1_rxBuffer, strlen(SPI1_rxBuffer), 100);
-  //       HAL_UART_Transmit(&huart1, "\r\n", 2, 100);
-  //       memset(&SPI1_rxBuffer, 0x00, sizeof(SPI1_rxBuffer));
-  //     }
-  //   }
-  // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  // HAL_Delay(231);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  // }
   /* USER CODE END 3 */
 }
 
