@@ -18,12 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "printf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +34,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define STR1(x) #x
+#define STR(x) STR1(x)
+#define huartM huart1
 
 /* USER CODE END PD */
 
@@ -44,7 +48,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t UART1_rxBuffer[32] = {0};
+uint8_t UART_rxBuffer[2] = {0};
+char CommandBuffer[64] = {0x00};
+size_t CommandBufferLength = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,26 +93,24 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  printf(STR(BUILD_ID) "\r\n");
+  // HAL_UART_Transmit(&huartM, "Ready\r\n", 7, 100);
+  HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer));
+  printf("Ready\r\n");
   /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  HAL_UART_Transmit(&huart1, "Ready\r\n", 7, 1000);
+  size_t LastCommandBufferLength = -1;
   while (1)
   {
-    memset(&UART1_rxBuffer, 0x00, sizeof(UART1_rxBuffer));
-    HAL_UART_Receive(&huart1, UART1_rxBuffer, 32, 100);
-    if (strlen(UART1_rxBuffer) > 0)
+
+    if (LastCommandBufferLength != CommandBufferLength)
     {
-      HAL_UART_Transmit(&huart1, "got: ", 5, 100);
-      HAL_UART_Transmit(&huart1, UART1_rxBuffer, strlen(UART1_rxBuffer), 100);
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
+      LastCommandBufferLength = CommandBufferLength;
     }
-    // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    // HAL_Delay(231);
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -151,6 +155,21 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+  // printf("got %d bytes: %s\r\n", strlen(UART_rxBuffer), UART_rxBuffer);
+  // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+  if (CommandBufferLength > sizeof(CommandBuffer) - 2)
+  {
+    CommandBufferLength -= sizeof(CommandBuffer);
+    memset(&CommandBuffer + CommandBufferLength, 0x00, sizeof(CommandBuffer) - CommandBufferLength);
+  }
+  uint8_t l = strlen(&UART_rxBuffer);
+  for (size_t i = 0; i < l; i++)
+    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' ? '_' : UART_rxBuffer[i]);
+  memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
+}
 /* USER CODE END 4 */
 
 /**
@@ -162,6 +181,7 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  printf("Error_Handler\r\n");
   while (1)
   {
   }

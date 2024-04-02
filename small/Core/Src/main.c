@@ -18,12 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "printf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +34,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define STR1(x) #x
+#define STR(x) STR1(x)
+#define huartM huart2
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -44,7 +47,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t UART2_rxBuffer[32] = {0};
+uint8_t UART_rxBuffer[2] = {0};
+char CommandBuffer[64] = {0x00};
+size_t CommandBufferLength = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -55,18 +60,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  HAL_UART_Transmit(&huart2, UART2_rxBuffer, 32, 100);
-  HAL_UART_Receive_IT(&huart2, UART2_rxBuffer, 32);
-}
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
 
@@ -92,25 +91,27 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit(&huart2, "Ready\r\n", 7, 100);
+  printf(STR(BUILD_ID) "\r\n");
+  // HAL_UART_Transmit(&huartM, "Ready\r\n", 7, 100);
+  HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer));
+  printf("Ready\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  size_t LastCommandBufferLength = -1;
   while (1)
   {
 
-    memset(&UART2_rxBuffer, 0x00, sizeof(UART2_rxBuffer));
-    HAL_UART_Receive(&huart2, UART2_rxBuffer, 32, 100);
-    if (strlen(UART2_rxBuffer) > 0)
+    if (LastCommandBufferLength != CommandBufferLength)
     {
-      HAL_UART_Transmit(&huart2, "got: ", 5, 100);
-      HAL_UART_Transmit(&huart2, UART2_rxBuffer, strlen(UART2_rxBuffer), 100);
-      HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+      printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
+      LastCommandBufferLength = CommandBufferLength;
     }
-    // HAL_Delay(200);
+    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -119,17 +120,17 @@ int main(void)
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+ * @brief System Clock Configuration
+ * @retval None
+ */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+   * in the RCC_OscInitTypeDef structure.
+   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -140,9 +141,8 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
+   */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -154,32 +154,47 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
 
+  // printf("got %d bytes: %s\r\n", strlen(UART_rxBuffer), UART_rxBuffer);
+  // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+  if (CommandBufferLength > sizeof(CommandBuffer) - 2)
+  {
+    CommandBufferLength -= sizeof(CommandBuffer);
+    memset(&CommandBuffer + CommandBufferLength, 0x00, sizeof(CommandBuffer) - CommandBufferLength);
+  }
+  uint8_t l = strlen(&UART_rxBuffer);
+  for (size_t i = 0; i < l; i++)
+    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' ? '_' : UART_rxBuffer[i]);
+  memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
+}
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  printf("Error_Handler\r\n");
   while (1)
   {
   }
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
