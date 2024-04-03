@@ -115,6 +115,17 @@ int main(void)
       printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
       LastCommandBufferLength = CommandBufferLength;
     }
+
+    if (LastCommandBufferLength > 0)
+    {
+      if (HAL_OK == HAL_SPI_Transmit(&hspi1, CommandBuffer, CommandBufferLength, 100))
+      {
+        printf("sent %d bytes via SPI: %s\r\n", CommandBufferLength, CommandBuffer);
+        memset(&CommandBuffer, 0x00, 8);
+        // memset(&CommandBuffer, 0x00, CommandBufferLength);
+        CommandBufferLength = 0;
+      }
+    }
     HAL_Delay(100);
     /* USER CODE END WHILE */
 
@@ -172,7 +183,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
   uint8_t l = strlen(&UART_rxBuffer);
   for (size_t i = 0; i < l; i++)
-    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' ? '_' : UART_rxBuffer[i]);
+    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' || UART_rxBuffer[i] == '\r') ? '_' : UART_rxBuffer[i];
   memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
 }
 /* USER CODE END 4 */
