@@ -106,6 +106,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   size_t LastCommandBufferLength = -1;
   uint8_t SPI_rxBuffer[9] = {0x00};
+
   while (1)
   {
 
@@ -114,10 +115,22 @@ int main(void)
       printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
       LastCommandBufferLength = CommandBufferLength;
     }
-    if (HAL_OK == HAL_SPI_Receive(&hspi1, SPI_rxBuffer, sizeof(SPI_rxBuffer) - 1, 100))
+
+    if (LastCommandBufferLength > 0)
+    {
+      if (HAL_OK == HAL_SPI_Transmit(&hspi1, &CommandBuffer, CommandBufferLength, 100))
+      {
+        printf("sent %d bytes via SPI: %s\r\n", CommandBufferLength, CommandBuffer);
+        memset(&CommandBuffer, 0x00, 8);
+        // memset(&CommandBuffer, 0x00, CommandBufferLength);
+        CommandBufferLength = 0;
+      }
+    }
+
+    if (HAL_OK == HAL_SPI_Receive(&hspi1, &SPI_rxBuffer, sizeof(SPI_rxBuffer) - 1, 100) && strlen(SPI_rxBuffer) > 0)
     {
       printf("got %d bytes from SPI: %s\r\n", strlen(SPI_rxBuffer), SPI_rxBuffer);
-      memset(SPI_rxBuffer, 0x00, sizeof(SPI_rxBuffer) - 1);
+      memset(&SPI_rxBuffer, 0x00, sizeof(SPI_rxBuffer));
     }
     // else
     //   HAL_Delay(100);
