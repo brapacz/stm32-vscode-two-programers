@@ -105,6 +105,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   size_t LastCommandBufferLength = -1;
+  uint8_t SPI_rxBuffer[9] = {0x00};
   while (1)
   {
 
@@ -113,7 +114,13 @@ int main(void)
       printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
       LastCommandBufferLength = CommandBufferLength;
     }
-    HAL_Delay(100);
+    if (HAL_OK == HAL_SPI_Receive(&hspi1, SPI_rxBuffer, sizeof(SPI_rxBuffer) - 1, 100))
+    {
+      printf("got %d bytes from SPI: %s\r\n", strlen(SPI_rxBuffer), SPI_rxBuffer);
+      memset(SPI_rxBuffer, 0x00, sizeof(SPI_rxBuffer) - 1);
+    }
+    // else
+    //   HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -168,7 +175,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
   uint8_t l = strlen(&UART_rxBuffer);
   for (size_t i = 0; i < l; i++)
-    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' ? '_' : UART_rxBuffer[i]);
+    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' || UART_rxBuffer[i] == '\r') ? '_' : UART_rxBuffer[i];
   memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
 }
 /* USER CODE END 4 */
