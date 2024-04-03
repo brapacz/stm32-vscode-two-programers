@@ -111,11 +111,12 @@ int main(void)
 
   while (1)
   {
-
+    uint8_t any = 0;
     if (LastCommandBufferLength != CommandBufferLength)
     {
       printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
       LastCommandBufferLength = CommandBufferLength;
+      any = 1;
     }
 
     if (LastCommandBufferLength > 0)
@@ -126,6 +127,7 @@ int main(void)
         memset(&CommandBuffer, 0x00, 8);
         // memset(&CommandBuffer, 0x00, CommandBufferLength);
         CommandBufferLength = 0;
+        any = 1;
       }
     }
 
@@ -133,7 +135,12 @@ int main(void)
     {
       printf("got %d bytes from SPI: %s\r\n", strlen(SPI_rxBuffer), SPI_rxBuffer);
       memset(&SPI_rxBuffer, 0x00, sizeof(SPI_rxBuffer));
+      any = 1;
+      HAL_Delay(2000);
     }
+
+    if (!any)
+      HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -191,7 +198,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
   uint8_t l = strlen(&UART_rxBuffer);
   for (size_t i = 0; i < l; i++)
-    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' || UART_rxBuffer[i] == '\r') ? '_' : UART_rxBuffer[i];
+    if (UART_rxBuffer[i] != '\n' && UART_rxBuffer[i] != '\r')
+      CommandBuffer[CommandBufferLength++] = UART_rxBuffer[i];
   memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
 }
 /* USER CODE END 4 */
