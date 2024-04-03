@@ -52,6 +52,11 @@
 uint8_t UART_rxBuffer[2] = {0};
 char CommandBuffer[64] = {0x00};
 size_t CommandBufferLength = 0;
+
+size_t LastCommandBufferLength = -1;
+size_t LastSPIBufferLength = -1;
+uint8_t SPI_rxBuffer[9] = {0x00};
+size_t SpiCommandBuffer[64] = {0x00};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -106,36 +111,23 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  size_t LastCommandBufferLength = -1;
-  size_t LastSPIBufferLength = -1;
-  uint8_t SPI_rxBuffer[9] = {0x00};
-  size_t SpiCommandBuffer[64] = {0x00};
 
+  HAL_SPI_TransmitReceive_IT(&hspi1, &CommandBuffer, &SPI_rxBuffer, 1);
   while (1)
   {
 
-    if (LastSPIBufferLength != strlen(SpiCommandBuffer))
+    size_t SpiCommandBufferLen = strlen(SpiCommandBuffer);
+    if (LastSPIBufferLength != SpiCommandBufferLen)
     {
-      printf("UART buffer state: %d %s\r\n", strlen(SpiCommandBuffer), SpiCommandBuffer);
-      LastSPIBufferLength = strlen(SpiCommandBuffer);
+      printf("SPI buffer state: %d %s\r\n", SpiCommandBufferLen, SpiCommandBuffer);
+      LastSPIBufferLength = SpiCommandBufferLen;
     }
     if (LastCommandBufferLength != CommandBufferLength)
     {
-      printf("SPI buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
+      printf("UART buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
       LastCommandBufferLength = CommandBufferLength;
     }
 
-    HAL_SPI_TransmitReceive(&hspi1, &CommandBuffer, &SPI_rxBuffer, 1, 1000);
-    if (CommandBufferLength > 0)
-    {
-      memcpy(&CommandBuffer, &CommandBuffer + sizeof(uint8_t), CommandBufferLength - 1);
-      CommandBuffer[--CommandBufferLength] = 0x00;
-    }
-
-    if (SPI_rxBuffer[0] != 0x00)
-    {
-      SpiCommandBuffer[strlen(SpiCommandBuffer)] = SPI_rxBuffer[0];
-    }
     // if (LastCommandBufferLength > 0)
     // {
     //   if (HAL_OK == HAL_SPI_Transmit(&hspi1, &CommandBuffer, CommandBufferLength, 100))
@@ -213,6 +205,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     if (UART_rxBuffer[i] != '\n' && UART_rxBuffer[i] != '\r')
       CommandBuffer[CommandBufferLength++] = UART_rxBuffer[i];
   memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
+}
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+  if (CommandBufferLength > 0)
+  {
+    printf("HAL_SPI_TxRxCpltCallback() CommandBufferLength > 0\r\n");
+    memcpy(&CommandBuffer, &CommandBuffer + sizeof(uint8_t), CommandBufferLength - 1);
+    CommandBuffer[--CommandBufferLength] = 0x00;
+  }
+
+  if (SPI_rxBuffer[0] != 0x00)
+  {
+    printf("HAL_SPI_TxRxCpltCallback() SPI_rxBuffer[0] != 0x00\r\n");
+    SpiCommandBuffer[strlen(SpiCommandBuffer)] = SPI_rxBuffer[0];
+  }
+  HAL_SPI_TransmitReceive_IT(&hspi1, &CommandBuffer, &SPI_rxBuffer, 1);
 }
 /* USER CODE END 4 */
 
