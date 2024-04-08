@@ -2,6 +2,48 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Flash both and test",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "flash",
+                "test"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test both as is",
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "test"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            }
+        },
+        {
             "label": "Flash both and reset",
             "group": {
                 "kind": "build",
