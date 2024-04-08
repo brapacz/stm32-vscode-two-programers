@@ -6,15 +6,19 @@ C_DEFS += \
 -DBUILD_ID="$(BUILD_ID)"
 
 
+.PHONY: flash
 flash: $(BUILD_DIR)/$(TARGET).bin _stlink-serial
 	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) write $(BUILD_DIR)/$(TARGET).bin 0x08000000
 
+.PHONY: erase
 erase: _stlink-serial
 	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) erase
 
+.PHONY: reset
 reset: _stlink-serial
 	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) reset
 
+.PHONY: _stlink-serial
 _stlink-serial:
 	@if [ ! -n "$(STLINK_SERIAL)" ]; then \
 		@echo "Stlink serial is not set. Check config.yaml file and put there one of the following serial numbers:"; \
