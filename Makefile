@@ -24,3 +24,9 @@ all:
 
 serial:
 	./connect_to_serial
+
+test: test-setup
+	python3 -m unittest discover ./test -p '*.py'
+
+test-setup:
+	pip3 install -r ./test/requirements.txt

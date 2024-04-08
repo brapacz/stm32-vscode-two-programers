@@ -121,7 +121,7 @@ int main(void)
     HAL_UART_Receive(&huartM, &toSend, sizeof(toSend), 100);
     if (strlen(toSend) > 0)
     {
-      HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 1000);
+      HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 100);
       printf("SPI: > %s (%d)\r\n", toSend, strlen(toSend));
     }
 

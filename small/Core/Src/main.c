@@ -103,7 +103,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   char toSend[64] = {0x00};
-  char receive[64] = {0x00};1234
+  char receive[64] = {0x00};
   printf("UART receive buffer size: %d\r\n", sizeof(toSend));
   printf("SPI  receive buffer size: %d\r\n", sizeof(receive));
   while (1)
@@ -112,7 +112,7 @@ int main(void)
     HAL_UART_Receive(&huartM, &toSend, sizeof(toSend), 100);
     if (strlen(toSend) > 0)
     {
-      HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 1000);
+      HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 100);
       printf("SPI: > %s (%d)\r\n", toSend, strlen(toSend));
     }
 
