@@ -23,10 +23,14 @@ all:
 	cd big && make all
 
 serial:
-	./connect_to_serial
+	@echo "TIP: you can use \`make serial\` command in each big/small directory to use already devined port"
+	@echo "  defined for small: $(SMALL_UART_DEVICE)"
+	@echo "  defined for big: $(BIG_UART_DEVICE)"
+	@echo
+	@./connect_to_serial
 
 test: test-setup
-	python3 -m unittest discover ./test -p '*.py'
+	env SMALL_UART_DEVICE=$(SMALL_UART_DEVICE) BIG_UART_DEVICE=$(BIG_UART_DEVICE) python3 -m unittest discover ./test -p '*.py'
 
 test-setup:
 	pip3 install -r ./test/requirements.txt

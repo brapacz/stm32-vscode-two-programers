@@ -1,11 +1,11 @@
 import unittest
 import serial
-from os import system
+from os import system, getenv
 from threading import Thread
 import time
 
-SMALL_UART = '/dev/ttyUSB2'
-BIG_UART = '/dev/ttyUSB0'
+SMALL_UART_DEVICE = getenv('SMALL_UART_DEVICE')
+BIG_UART_DEVICE = getenv('BIG_UART_DEVICE')
 
 class MCU(object):
     def __init__(self, name, port):
@@ -52,10 +52,10 @@ class MCU(object):
 
 class SimpleTransmissionTest(unittest.TestCase):
     def setUp(self) :
-        self.big = MCU('big', BIG_UART)
+        self.big = MCU('big', BIG_UART_DEVICE)
         self.big.reset()
 
-        self.small = MCU('small', SMALL_UART)
+        self.small = MCU('small', SMALL_UART_DEVICE)
         self.small.reset()
 
         self.big.wait_for_string(b'Ready')
