@@ -3,9 +3,16 @@ import serial
 from os import system, getenv
 from threading import Thread
 import time
+import logging
+import sys
 
 SMALL_UART_DEVICE = getenv('SMALL_UART_DEVICE')
 BIG_UART_DEVICE = getenv('BIG_UART_DEVICE')
+
+logger = logging.getLogger()
+logger.level = logging.DEBUG # TODO: make it read from env var
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
 
 class MCU(object):
     def __init__(self, name, port):
@@ -36,6 +43,10 @@ class MCU(object):
                 if line.startswith(string):
                     return line
 
+    def write(self, data):
+        logger.debug(f'UART> {self.name}: {data}')
+        self.serial.write(data)
+
     def _read_data_in_background(self):
         self.running = True
         def _thread_main(self):
@@ -43,6 +54,7 @@ class MCU(object):
                 line = self.serial.readline()
                 if line:
                     self.lines.append(line)
+                    logger.debug(f'UART< {self.name}: {line}')
             self.serial.close()
 
         self._thread=Thread(target=_thread_main,args=(self,))
@@ -67,23 +79,23 @@ class SimpleTransmissionTest(unittest.TestCase):
         self.small.close()
         self.big.close()
 
-        result = self._outcome.result
-        ok = all(test != self for test, text in result.errors + result.failures)
-        if not ok:
-            print()
-            print('SMALL:')
-            for line in self.small.lines:
-                print(line)
-            print()
-            print('BIG:')
-            for line in self.big.lines:
-                print(line)
-            print()
+        # result = self._outcome.result
+        # ok = all(test != self for test, text in result.errors + result.failures)
+        # if not ok:
+        #     print()
+        #     print('SMALL:')
+        #     for line in self.small.lines:
+        #         print(line)
+        #     print()
+        #     print('BIG:')
+        #     for line in self.big.lines:
+        #         print(line)
+        #     print()
 
         return super().tearDown()
 
     def test_simply_pass_string_over_spi(self):
-        self.big.serial.write(b"QWERTY\r\n")
+        self.big.write(b"QWERTY\r\n")
         self.assertIsNotNone(self.small.wait_for_string(b"SPI: < QWERTY"), 'MCU should print QWERTY')
 
 

@@ -42,7 +42,7 @@ serial:
 
 .PHONY: test
 test: #test-setup
-	env SMALL_UART_DEVICE=$(SMALL_UART_DEVICE) BIG_UART_DEVICE=$(BIG_UART_DEVICE) python3 -m unittest discover ./test -p '*.py'
+	env SMALL_UART_DEVICE=$(SMALL_UART_DEVICE) BIG_UART_DEVICE=$(BIG_UART_DEVICE) python3 -m unittest discover ./test -p '*.py' ${TESTOPTS}
 
 .PHONY: test-se
 test-setup:
