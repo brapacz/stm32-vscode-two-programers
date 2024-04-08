@@ -3,24 +3,28 @@ SMALL_UART_DEVICE = $(shell cat config.yml | yq -r .small.uart.device)
 BIG_UART_DEVICE = $(shell cat config.yml | yq -r .big.uart.device)
 
 erase:
-	cd small && make erase
-	cd big && make erase
+	@cd small && make erase
+	@cd big && make erase
 
 reset:
-	cd small && make reset
-	cd big && make reset
+	@cd small && make reset
+	@cd big && make reset
 
 flash:
-	cd small && make flash
-	cd big && make flash
+	@cd small && make flash
+	@cd big && make flash
 
 clean:
-	cd small && make clean
-	cd big && make clean
+	@cd small && make clean
+	@cd big && make clean
 
 all:
-	cd small && make all
-	cd big && make all
+	@cd small && make all
+	@cd big && make all
+
+show-config:
+	@cd small && make show-config
+	@cd big && make show-config
 
 serial:
 	@echo "TIP: you can use \`make serial\` command in each big/small directory to use already devined port"
