@@ -67,12 +67,18 @@ class SimpleTransmissionTest(unittest.TestCase):
         self.small.close()
         self.big.close()
 
-        print('SMALL:')
-        for line in self.small.lines:
-            print(line)
-        print('BIG:')
-        for line in self.big.lines:
-            print(line)
+        result = self._outcome.result
+        ok = all(test != self for test, text in result.errors + result.failures)
+        if not ok:
+            print()
+            print('SMALL:')
+            for line in self.small.lines:
+                print(line)
+            print()
+            print('BIG:')
+            for line in self.big.lines:
+                print(line)
+            print()
 
         return super().tearDown()
 
