@@ -10,12 +10,18 @@ SMALL_UART_DEVICE = getenv('SMALL_UART_DEVICE')
 BIG_UART_DEVICE = getenv('BIG_UART_DEVICE')
 
 logger = logging.getLogger()
-logger.level = logging.DEBUG # TODO: make it read from env var
+try:
+    logger.level = getattr(logging, getenv('LOG_LEVEL', 'INFO').upper())
+except AttributeError:
+    logger.level = logging.INFO
+
 stream_handler = logging.StreamHandler(sys.stdout)
 logger.addHandler(stream_handler)
 
 class MCU(object):
-    def __init__(self, name, port):
+    def __init__(self, name, port, startTime):
+        self.startTime = startTime
+
         self.port = port
         self.serial = serial.Serial(port=port, baudrate=115200, bytesize=8, timeout=1, stopbits=serial.STOPBITS_ONE)
         self.name = name
@@ -44,17 +50,17 @@ class MCU(object):
                     return line
 
     def write(self, data):
-        logger.debug(f'UART> {self.name}: {data}')
+        logger.debug('%0.4f: %s %5s: %s' % (time.time()-self.startTime, '>', self.name, data))
         self.serial.write(data)
 
     def _read_data_in_background(self):
         self.running = True
         def _thread_main(self):
             while self.running:
-                line = self.serial.readline()
-                if line:
-                    self.lines.append(line)
-                    logger.debug(f'UART< {self.name}: {line}')
+                data = self.serial.readline()
+                if data:
+                    self.lines.append(data)
+                    logger.debug('%0.4f: %s %5s: %s' % (time.time()-self.startTime, '<', self.name, data))
             self.serial.close()
 
         self._thread=Thread(target=_thread_main,args=(self,))
@@ -63,11 +69,13 @@ class MCU(object):
 
 
 class SimpleTransmissionTest(unittest.TestCase):
-    def setUp(self) :
-        self.big = MCU('big', BIG_UART_DEVICE)
+    def setUp(self):
+        self.startTime = time.time()
+
+        self.big = MCU('big', BIG_UART_DEVICE, self.startTime)
         self.big.reset()
 
-        self.small = MCU('small', SMALL_UART_DEVICE)
+        self.small = MCU('small', SMALL_UART_DEVICE, self.startTime)
         self.small.reset()
 
         self.big.wait_for_string(b'Ready')
@@ -78,20 +86,6 @@ class SimpleTransmissionTest(unittest.TestCase):
     def tearDown(self):
         self.small.close()
         self.big.close()
-
-        # result = self._outcome.result
-        # ok = all(test != self for test, text in result.errors + result.failures)
-        # if not ok:
-        #     print()
-        #     print('SMALL:')
-        #     for line in self.small.lines:
-        #         print(line)
-        #     print()
-        #     print('BIG:')
-        #     for line in self.big.lines:
-        #         print(line)
-        #     print()
-
         return super().tearDown()
 
     def test_simply_pass_string_over_spi(self):

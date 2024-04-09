@@ -9,3 +9,6 @@ small:
     serial: 400018000200004E4B52524E
   uart:
     device: /dev/serial/by-path/pci-0000:00:14.0-usb-0:2.4.2.4.4:1.0-port0
+
+test:
+  log_level: debug
