@@ -22,6 +22,8 @@ reset: _stlink-serial
 _stlink-serial:
 	@if [ ! -n "$(STLINK_SERIAL)" ]; then \
 		@echo "Stlink serial is not set. Check config.yaml file and put there one of the following serial numbers:"; \
+	@if [ ! -n "$(STLINK_SERIAL)" ]; then \
+		@echo "Stlink serial is not set. Check config.yml file and put there one of the following serial numbers:"; \
 		st-info --probe; \
 		false; \
 	fi
