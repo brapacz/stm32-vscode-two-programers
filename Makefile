@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+SMALL_UART_DEVICE = $(shell cat config.yml | yq -r .small.uart.device)
+BIG_UART_DEVICE = $(shell cat config.yml | yq -r .big.uart.device)
 
 erase:
 	cd small && make erase

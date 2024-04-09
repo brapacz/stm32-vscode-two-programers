@@ -1,4 +1,5 @@
-MCU_SERIAL = $(shell cat STLINK_SERIAL)
+STLINK_SERIAL = $(shell cat ../config.yml | yq -r .$(TARGET).stlink.serial)
+UART_DEVICE = $(shell cat ../config.yml | yq -r .$(TARGET).uart.device)
 BUILD_ID = $(TARGET) $(shell date +"%Y-%m-%d %H:%M:%S") git:$(shell git rev-parse HEAD)
 
 C_DEFS += \
@@ -6,19 +7,37 @@ C_DEFS += \
 
 
 flash: $(BUILD_DIR)/$(TARGET).bin _stlink-serial
-	st-flash $(STFLASH_ARGS) --serial $(MCU_SERIAL) write $(BUILD_DIR)/$(TARGET).bin 0x08000000
+	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) write $(BUILD_DIR)/$(TARGET).bin 0x08000000
 
 erase: _stlink-serial
-	st-flash $(STFLASH_ARGS) --serial $(MCU_SERIAL) erase
+	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) erase
 
 reset: _stlink-serial
-	st-flash $(STFLASH_ARGS) --serial $(MCU_SERIAL) reset
+	st-flash $(STFLASH_ARGS) --serial $(STLINK_SERIAL) reset
 
 _stlink-serial:
-	@if [ ! -f STLINK_SERIAL ]; then \
-		echo "STLINK_SERIAL file is missing. Create it in $(shell pwd)/STLINK_SERIAL and put one of the following serial numbers:"; \
+	@if [ ! -n "$(STLINK_SERIAL)" ]; then \
+		@echo "Stlink serial is not set. Check config.yml file and put there one of the following serial numbers:"; \
 		st-info --probe; \
 		false; \
 	fi
-build_id:
-	@echo $(BUILD_ID)
+
+.PHONY:
+serial: _uart-device
+	picocom -b 115200 --echo "$(UART_DEVICE)"
+
+.PHONY: _uart-device
+_uart-device:
+	@if [ ! -n "$(UART_DEVICE)" ]; then \
+		@echo "UART device is not set. Check config.yml file and put there one of devices from /dev/tty* or /dev/serial/by-path/*"; \
+		ls /dev/serial/by-path/* /dev/tty*; \
+		false; \
+	fi
+
+.PHONY: show-config
+show-config:
+	@echo "TARGET:           $(TARGET)"
+	@echo "BUILD_ID (fresh): $(BUILD_ID)"
+	@echo "UART_DEVICE:      $(UART_DEVICE)"
+	@echo "STLINK_SERIAL:    $(STLINK_SERIAL)"
+	@echo
