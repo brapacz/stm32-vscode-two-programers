@@ -11,7 +11,12 @@
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
-            "servertype": "stutil"
+            "servertype": "stutil",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "serialNumber": "382719002B135937334D4E00"
         },
         {
             "name": "small - Cortex Debug",
@@ -20,7 +25,12 @@
             "request": "launch",
             "type": "cortex-debug",
             "runToEntryPoint": "main",
-            "servertype": "stutil"
+            "servertype": "stutil",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 4
+            },
+            "serialNumber": "400018000200004E4B52524E"
         }
     ]
 }
