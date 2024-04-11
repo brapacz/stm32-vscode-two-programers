@@ -48,8 +48,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-char toSend[10] = {0x00};
-char receive[10] = {0x00};
+uint8_t RxBuffer[10];
+volatile uint32_t RxCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,9 +63,9 @@ void SystemClock_Config(void);
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
 
@@ -96,35 +96,16 @@ int main(void)
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
-  // HAL_UART_Transmit(&huartM, "Ready\r\n", 7, 100);
-  // HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer));
+  HAL_SPI_Receive_DMA(&hspi1, (uint8_t)RxBuffer, 10);
   printf("Ready\r\n");
-  // HAL_SPI_Transmit(&hspi1, "hello :)", 8, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  printf("UART receive buffer size: %d\r\n", sizeof(toSend));
-  printf("SPI  receive buffer size: %d\r\n", sizeof(receive));
   while (1)
   {
-    memset(&toSend, 0x00, sizeof(toSend));
-    HAL_UART_Receive(&huartM, &toSend, sizeof(toSend), 100);
-    if (strlen(toSend) > 0)
-    {
-      HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 100);
-      printf("SPI: > %s (%d)\r\n", toSend, strlen(toSend));
-    }
-
-    while (1)
-    {
-      memset(&receive, 0x00, sizeof(receive));
-      HAL_SPI_Receive(&hspi1, &receive, 8, 100);
-      if (strlen(receive) == 0)
-        break;
-      printf("SPI: < %s (%d)\r\n", receive, strlen(receive));
-    }
-    //   HAL_Delay(100);
+    printf("RxCount: %ld\r\n", RxCount);
+    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -133,17 +114,17 @@ int main(void)
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
+  * in the RCC_OscInitTypeDef structure.
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
@@ -154,8 +135,9 @@ void SystemClock_Config(void)
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
@@ -167,19 +149,19 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
 {
-}
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
+  // if (hspi->Instance == SPI1)
+  {
+    RxCount++;
+  }
 }
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
@@ -192,14 +174,14 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
