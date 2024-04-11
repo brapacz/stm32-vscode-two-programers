@@ -131,6 +131,25 @@
                 "showReuseMessage": true,
                 "clear": false
             }
+        },
+        {
+            "label": "Build .vscode/launch.json file from template",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                ".vscode/launch.json"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
         }
     ]
 }
