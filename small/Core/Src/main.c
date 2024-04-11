@@ -48,6 +48,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+char toSend[10] = {0x00};
+char receive[10] = {0x00};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,8 +104,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  char toSend[64] = {0x00};
-  char receive[64] = {0x00};
   printf("UART receive buffer size: %d\r\n", sizeof(toSend));
   printf("SPI  receive buffer size: %d\r\n", sizeof(receive));
   while (1)

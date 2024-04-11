@@ -49,14 +49,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-volatile uint8_t UART_rxBuffer[2] = {0};
-volatile char CommandBuffer[64] = {0x00};
-volatile size_t CommandBufferLength = 0;
 
-volatile size_t LastCommandBufferLength = -1;
-volatile size_t LastSPIBufferLength = -1;
-volatile uint8_t SPI_rxBuffer[9] = {0x00};
-volatile size_t SpiCommandBuffer[64] = {0x00};
+char toSend[10] = {0x00};
+char receive[10] = {0x00};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,20 +100,18 @@ int main(void)
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
   // HAL_UART_Transmit(&huartM, "Ready\r\n", 7, 100);
-  // HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer));
+  // HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer)/sizeof(UART_rxBuffer[0]));
   printf("Ready\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  char toSend[64] = {0x00};
-  char receive[64] = {0x00};
-  printf("UART receive buffer size: %d\r\n", sizeof(toSend));
-  printf("SPI  receive buffer size: %d\r\n", sizeof(receive));
+  printf("UART receive buffer size: %d\r\n", sizeof(toSend) / sizeof(toSend[0]));
+  printf("SPI  receive buffer size: %d\r\n", sizeof(receive) / sizeof(receive[0]));
   while (1)
   {
-    memset(&toSend, 0x00, sizeof(toSend));
-    HAL_UART_Receive(&huartM, &toSend, sizeof(toSend), 100);
+    memset(&toSend, 0x00, sizeof(toSend) / sizeof(toSend[0]));
+    HAL_UART_Receive(&huartM, &toSend, sizeof(toSend) / sizeof(toSend[0]), 100);
     if (strlen(toSend) > 0)
     {
       HAL_SPI_Transmit(&hspi1, &toSend, strlen(toSend), 100);
@@ -127,10 +120,14 @@ int main(void)
 
     while (1)
     {
-      memset(&receive, 0x00, sizeof(receive));
+      auto size = sizeof(receive) / sizeof(receive[0]);
+      memset(&receive, 0x00, size);
       HAL_SPI_Receive(&hspi1, &receive, 8, 100);
       if (strlen(receive) == 0)
         break;
+      printf("sizeof(receive): %d\r\n", size);
+      for (int i = 0; i < sizeof(receive); i++)
+        printf("receive[%d]: 0x%02x\r\n", i, receive[i]);
       printf("SPI: < %s (%d)\r\n", receive, strlen(receive));
     }
     //   HAL_Delay(100);
