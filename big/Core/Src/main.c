@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -48,8 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t TxBuffer[10];
-volatile uint32_t TxCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -93,11 +90,9 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
 
-  MX_SPI1_Init();
   printf("Ready\r\n");
   /* USER CODE END 2 */
 
@@ -105,27 +100,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_SPI_Transmit_IT(&hspi1, (uint8_t *)TxBuffer, 10);
-    printf("TxCount: %ld\r\n", TxCount);
-    for (int i = 0; i < 10; i++)
-    {
-      TxBuffer[i]++;
-    }
-    printf(
-        "TxBuffer 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\r\n",
-        TxBuffer[0],
-        TxBuffer[1],
-        TxBuffer[2],
-        TxBuffer[3],
-        TxBuffer[4],
-        TxBuffer[5],
-        TxBuffer[6],
-        TxBuffer[7],
-        TxBuffer[8],
-        TxBuffer[9]);
-
-    HAL_Delay(500);
-    printf("\r\n");
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -169,13 +143,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  if (hspi->Instance == SPI1)
-  {
-    TxCount++;
-  }
-}
 /* USER CODE END 4 */
 
 /**

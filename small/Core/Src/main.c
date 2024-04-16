@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -47,8 +46,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t RxBuffer[10];
-volatile uint32_t RxCount;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,7 +88,6 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
   printf("Ready\r\n");
@@ -99,24 +95,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_SPI_Receive_IT(&hspi1, (uint8_t *)RxBuffer, 10);
   while (1)
   {
-    printf("RxCount: %ld\r\n", RxCount);
-    printf(
-        "RxBuffer 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\r\n",
-        RxBuffer[0],
-        RxBuffer[1],
-        RxBuffer[2],
-        RxBuffer[3],
-        RxBuffer[4],
-        RxBuffer[5],
-        RxBuffer[6],
-        RxBuffer[7],
-        RxBuffer[8],
-        RxBuffer[9]);
-    HAL_Delay(500);
-    printf("\r\n");
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -159,14 +139,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-  // if (hspi->Instance == SPI1)
-  {
-    RxCount++;
-  }
-  HAL_SPI_Receive_IT(&hspi1, (uint8_t *)RxBuffer, 10);
-}
 /* USER CODE END 4 */
 
 /**
