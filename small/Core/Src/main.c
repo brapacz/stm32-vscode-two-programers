@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dma.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -47,9 +46,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t UART_rxBuffer[2] = {0};
-char CommandBuffer[64] = {0x00};
-size_t CommandBufferLength = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -91,27 +87,16 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
-  // HAL_UART_Transmit(&huartM, "Ready\r\n", 7, 100);
-  HAL_UART_Receive_DMA(&huartM, UART_rxBuffer, sizeof(UART_rxBuffer));
   printf("Ready\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  size_t LastCommandBufferLength = -1;
   while (1)
   {
-
-    if (LastCommandBufferLength != CommandBufferLength)
-    {
-      printf("buffer state: %d %s\r\n", CommandBufferLength, CommandBuffer);
-      LastCommandBufferLength = CommandBufferLength;
-    }
-    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -154,21 +139,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-
-  // printf("got %d bytes: %s\r\n", strlen(UART_rxBuffer), UART_rxBuffer);
-  // HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-  if (CommandBufferLength > sizeof(CommandBuffer) - 2)
-  {
-    CommandBufferLength -= sizeof(CommandBuffer);
-    memset(&CommandBuffer + CommandBufferLength, 0x00, sizeof(CommandBuffer) - CommandBufferLength);
-  }
-  uint8_t l = strlen(&UART_rxBuffer);
-  for (size_t i = 0; i < l; i++)
-    CommandBuffer[CommandBufferLength++] = (UART_rxBuffer[i] == '\n' ? '_' : UART_rxBuffer[i]);
-  memset(&UART_rxBuffer, 0x00, sizeof(UART_rxBuffer));
-}
 /* USER CODE END 4 */
 
 /**
