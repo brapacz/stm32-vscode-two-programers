@@ -47,6 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint8_t rxBuffer[10];
+uint8_t txBuffer[10];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,6 +92,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   printf(STR(BUILD_ID) "\r\n");
 
@@ -98,6 +101,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_UART_Receive_IT(&huart1, rxBuffer, 10);
+  HAL_UART_Receive_IT(&huart2, txBuffer, 10);
   while (1)
   {
     /* USER CODE END WHILE */
@@ -143,6 +148,22 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  printf("HAL_UART_RxCpltCallback(): ");
+  if (huart->Instance == huart1.Instance)
+  {
+    printf("uart1 -> uart2\r\n");
+    HAL_UART_Transmit_IT(&huart2, rxBuffer, 10);
+    HAL_UART_Receive_IT(&huart1, rxBuffer, 10);
+  }
+  if (huart->Instance == huart2.Instance)
+  {
+    printf("uart2 -> uart1\r\n");
+    HAL_UART_Transmit_IT(&huart1, txBuffer, 10);
+    HAL_UART_Receive_IT(&huart2, txBuffer, 10);
+  }
+}
 /* USER CODE END 4 */
 
 /**
